@@ -34,6 +34,8 @@ import {
   Layers,
   LayoutTemplate,
   Star,
+  Link as LinkIcon,
+  Wand2,
   X
 } from 'lucide-react';
 
@@ -110,6 +112,10 @@ export const AdminPanel: React.FC = () => {
   const [tagInput, setTagInput] = useState('Interior, Desenvolvimento, Regional');
   const [readTimeMinutes, setReadTimeMinutes] = useState(4);
   const [isLead, setIsLead] = useState(false);
+
+  // Link / URL Importer state
+  const [importUrl, setImportUrl] = useState('');
+  const [isImportingUrl, setIsImportingUrl] = useState(false);
 
   // Success / error banner
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -260,7 +266,59 @@ export const AdminPanel: React.FC = () => {
     setTagInput('Interior, Desenvolvimento, Regional');
     setReadTimeMinutes(4);
     setIsLead(false);
+    setImportUrl('');
     setEditorMode('edit');
+  };
+
+  const handleImportFromUrl = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!importUrl.trim() || !importUrl.startsWith('http')) {
+      setNotification({
+        type: 'error',
+        message: 'Por favor, informe um URL de notícia válido iniciando com http:// ou https://',
+      });
+      setTimeout(() => setNotification(null), 4000);
+      return;
+    }
+
+    setIsImportingUrl(true);
+    try {
+      const res = await fetch('/api/scrape-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: importUrl.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.article) {
+        throw new Error(data.error || 'Não foi possível extrair a matéria deste link.');
+      }
+
+      const art = data.article;
+      setTitle(art.title || '');
+      setSubtitle(art.subtitle || '');
+      setContent(art.content || '');
+      if (art.coverImage) setCoverImage(art.coverImage);
+      if (art.category) setCategory(art.category);
+      if (art.scope) setScope(art.scope);
+      if (art.stateSigla) setSelectedStateSigla(art.stateSigla);
+      if (art.cityName) setSelectedCityName(art.cityName);
+      if (art.authorName) setAuthorName(art.authorName);
+      if (art.tags && art.tags.length > 0) setTagInput(art.tags.join(', '));
+
+      setNotification({
+        type: 'success',
+        message: '✨ Matéria importada e estruturada com sucesso! Revise os campos preenchidos e publique quando desejar.',
+      });
+    } catch (err: any) {
+      console.error('Import error:', err);
+      setNotification({
+        type: 'error',
+        message: err.message || 'Erro ao importar do link. Verifique se a página é pública e tente novamente.',
+      });
+    } finally {
+      setIsImportingUrl(false);
+    }
   };
 
   const handleSubmit = async (status: 'publicado' | 'rascunho') => {
@@ -567,6 +625,55 @@ export const AdminPanel: React.FC = () => {
           ) : (
             /* Standard FORM */
             <form onSubmit={e => e.preventDefault()} className="space-y-6">
+              {/* CAIXA DE IMPORTAÇÃO AUTOMÁTICA POR LINK / URL */}
+              <div className="p-5 bg-gradient-to-r from-emerald-950 via-stone-900 to-emerald-950 text-white rounded-2xl shadow-lg border border-emerald-800/80 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-emerald-800/80 text-emerald-300 rounded-lg">
+                      <LinkIcon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold font-editorial text-emerald-300 flex items-center gap-1.5">
+                        <span>Importar &amp; Replicar Matéria por Link / URL</span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
+                          IA Automática
+                        </span>
+                      </h3>
+                      <p className="text-xs text-stone-300 mt-0.5">
+                        Cole a URL de qualquer portal de notícias. A IA lerá o link e preencherá título, resumo, corpo, imagem e localidade para você!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <input
+                    type="url"
+                    value={importUrl}
+                    onChange={e => setImportUrl(e.target.value)}
+                    placeholder="Cole o link da matéria (ex: https://site.com/noticia...)"
+                    className="flex-1 px-3.5 py-2.5 text-xs bg-stone-950/90 border border-emerald-800/60 rounded-xl text-stone-100 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleImportFromUrl}
+                    disabled={isImportingUrl}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shrink-0"
+                  >
+                    {isImportingUrl ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Extraindo Matéria...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4 text-emerald-200" />
+                        <span>Extrair e Preencher</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
               {/* Título da Notícia */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
