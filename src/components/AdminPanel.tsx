@@ -33,6 +33,7 @@ import {
   Lock,
   Layers,
   LayoutTemplate,
+  Star,
   X
 } from 'lucide-react';
 
@@ -61,6 +62,7 @@ export const AdminPanel: React.FC = () => {
     addArticle, 
     updateArticle, 
     deleteArticle, 
+    setLeadArticle,
     openArticle, 
     setActiveView,
     isAdminAuthenticated,
@@ -107,6 +109,7 @@ export const AdminPanel: React.FC = () => {
   const [authorRole, setAuthorRole] = useState(adminUser?.role || 'Repórter Regional');
   const [tagInput, setTagInput] = useState('Interior, Desenvolvimento, Regional');
   const [readTimeMinutes, setReadTimeMinutes] = useState(4);
+  const [isLead, setIsLead] = useState(false);
 
   // Success / error banner
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -231,6 +234,7 @@ export const AdminPanel: React.FC = () => {
     setAuthorRole(article.author.role);
     setTagInput(article.tags.join(', '));
     setReadTimeMinutes(article.readTimeMinutes);
+    setIsLead(Boolean(article.isLead));
     setActiveAdminTab('form');
     setEditorMode('edit');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -255,6 +259,7 @@ export const AdminPanel: React.FC = () => {
     setAuthorRole(adminUser?.role || 'Repórter Regional');
     setTagInput('Interior, Desenvolvimento, Regional');
     setReadTimeMinutes(4);
+    setIsLead(false);
     setEditorMode('edit');
   };
 
@@ -293,6 +298,7 @@ export const AdminPanel: React.FC = () => {
         role: authorRole.trim() || 'Repórter',
       },
       status,
+      isLead,
     };
 
     if (editingId) {
@@ -924,6 +930,27 @@ export const AdminPanel: React.FC = () => {
                 </div>
               </div>
 
+              {/* Opção de Destaque: Manchete Principal de Capa */}
+              <div className="p-4 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl space-y-2">
+                <label className="flex items-start gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isLead}
+                    onChange={e => setIsLead(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 rounded text-amber-600 focus:ring-amber-500 font-bold cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5 uppercase tracking-wider">
+                      <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                      <span>Definir como Manchete Principal de Capa</span>
+                    </span>
+                    <p className="text-xs text-amber-800/80 dark:text-amber-300/80 mt-0.5">
+                      Ao marcar esta opção, esta notícia assumirá a primeira posição em destaque principal da home page (substituindo a manchete anterior).
+                    </p>
+                  </div>
+                </label>
+              </div>
+
               {/* Ações: Publicar Notícia vs Salvar Rascunho */}
               <div className="pt-6 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between gap-3 flex-wrap">
                 <button
@@ -1047,15 +1074,41 @@ export const AdminPanel: React.FC = () => {
                     </td>
 
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                          article.status === 'publicado'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                        }`}
-                      >
-                        {article.status}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            article.status === 'publicado'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                          }`}
+                        >
+                          {article.status}
+                        </span>
+
+                        {article.isLead ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-stone-950 shadow-2xs">
+                            <Star className="w-3 h-3 fill-stone-950" />
+                            <span>Manchete Principal</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLeadArticle(article.id);
+                              setNotification({
+                                type: 'success',
+                                message: `Notícia "${article.title}" definida como manchete principal da capa!`,
+                              });
+                              setTimeout(() => setNotification(null), 3500);
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 border border-amber-300 dark:border-amber-800 transition-colors cursor-pointer"
+                            title="Destacar esta notícia como a manchete principal na capa do portal"
+                          >
+                            <Star className="w-3 h-3 text-amber-600" />
+                            <span>Tornar Manchete</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
 
                     <td className="py-3 px-4 whitespace-nowrap text-stone-500 font-mono tabular-nums">

@@ -47,6 +47,7 @@ interface NewsContextType {
   addArticle: (newArticle: Omit<Article, 'id' | 'views' | 'publishedAt'>) => Promise<void>;
   updateArticle: (id: string, updated: Partial<Article>) => Promise<void>;
   deleteArticle: (id: string) => Promise<void>;
+  setLeadArticle: (id: string) => Promise<void>;
   resetToInitialArticles: () => Promise<void>;
 }
 
@@ -348,23 +349,74 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       views: 1,
       publishedAt: new Date().toISOString(),
     };
+
     try {
-      await setDoc(doc(db, 'articles', articleId), newArt);
+      if (data.isLead) {
+        // If this new article is marked as lead, un-mark previous lead articles
+        const batch = writeBatch(db);
+        articles.forEach(art => {
+          if (art.isLead) {
+            batch.update(doc(db, 'articles', art.id), { isLead: false });
+          }
+        });
+        batch.set(doc(db, 'articles', articleId), newArt);
+        await batch.commit();
+      } else {
+        await setDoc(doc(db, 'articles', articleId), newArt);
+      }
     } catch (error) {
       console.error('Error adding article to Firestore:', error);
-      setArticles(prev => [newArt, ...prev]);
+      setArticles(prev => [newArt, ...prev.map(a => data.isLead ? { ...a, isLead: false } : a)]);
     }
   };
 
   const updateArticle = async (id: string, updated: Partial<Article>) => {
     try {
-      await updateDoc(doc(db, 'articles', id), updated);
+      if (updated.isLead) {
+        // Un-mark any other article currently set as lead
+        const batch = writeBatch(db);
+        articles.forEach(art => {
+          if (art.id !== id && art.isLead) {
+            batch.update(doc(db, 'articles', art.id), { isLead: false });
+          }
+        });
+        batch.update(doc(db, 'articles', id), updated);
+        await batch.commit();
+      } else {
+        await updateDoc(doc(db, 'articles', id), updated);
+      }
+
       if (selectedArticle && selectedArticle.id === id) {
         setSelectedArticle(prev => prev ? { ...prev, ...updated } : null);
       }
     } catch (error) {
       console.error('Error updating article in Firestore:', error);
-      setArticles(prev => prev.map(item => item.id === id ? { ...item, ...updated } : item));
+      setArticles(prev => prev.map(item => {
+        if (item.id === id) return { ...item, ...updated };
+        if (updated.isLead && item.isLead) return { ...item, isLead: false };
+        return item;
+      }));
+    }
+  };
+
+  const setLeadArticle = async (id: string) => {
+    try {
+      const batch = writeBatch(db);
+      articles.forEach(art => {
+        const docRef = doc(db, 'articles', art.id);
+        if (art.id === id) {
+          batch.update(docRef, { isLead: true });
+        } else if (art.isLead) {
+          batch.update(docRef, { isLead: false });
+        }
+      });
+      await batch.commit();
+    } catch (error) {
+      console.error('Error setting lead article in Firestore:', error);
+      setArticles(prev => prev.map(a => ({
+        ...a,
+        isLead: a.id === id
+      })));
     }
   };
 
@@ -425,6 +477,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addArticle,
         updateArticle,
         deleteArticle,
+        setLeadArticle,
         resetToInitialArticles,
       }}
     >
