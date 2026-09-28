@@ -86,11 +86,8 @@ export const LatestCarousel: React.FC<LatestCarouselProps> = ({ articles }) => {
           <div className="p-1 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400">
             <Sparkles className="w-4 h-4" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold font-editorial text-stone-900 dark:text-stone-100 flex items-center gap-2">
-            <span>Manchetes Principais de Capa</span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-600/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-mono border border-emerald-600/20 font-sans">
-              Carrossel Principal
-            </span>
+          <h2 className="text-xl sm:text-2xl font-bold font-editorial text-stone-900 dark:text-stone-100">
+            Manchetes Principais de Capa
           </h2>
         </div>
 

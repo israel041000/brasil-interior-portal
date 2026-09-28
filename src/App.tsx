@@ -170,7 +170,7 @@ const MainContent: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Flame className="w-4 h-4 text-emerald-700 dark:text-emerald-500" />
                         <h2 className="text-lg sm:text-xl font-bold font-editorial text-stone-900 dark:text-stone-100">
-                          Destaques em Pauta ({destaquesPautaArticles.length})
+                          Destaques em Pauta
                         </h2>
                       </div>
                       <span className="text-xs text-stone-500">Reportagens Especiais de Todo o País</span>

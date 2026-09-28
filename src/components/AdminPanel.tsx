@@ -70,7 +70,10 @@ export const AdminPanel: React.FC = () => {
     isAdminAuthenticated,
     adminUser,
     logoutAdmin,
-    updateAdminPassword
+    updateAdminPassword,
+    categories,
+    addCategory,
+    deleteCategory
   } = useNews();
 
   // If user is not logged in, show the secure Admin Login
@@ -86,6 +89,11 @@ export const AdminPanel: React.FC = () => {
 
   // Inline Image Modal State
   const [isInlineImageModalOpen, setIsInlineImageModalOpen] = useState(false);
+
+  // Category Manager Modal State
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [categoryNotice, setCategoryNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Change Password Modal State
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -412,6 +420,36 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleAddCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    setCategoryNotice(null);
+    const result = await addCategory(newCategoryName);
+    if (result.success) {
+      setNewCategoryName('');
+      setCategoryNotice({ type: 'success', message: result.message || 'Categoria criada!' });
+      setTimeout(() => setCategoryNotice(null), 3000);
+    } else {
+      setCategoryNotice({ type: 'error', message: result.message || 'Erro ao criar categoria.' });
+    }
+  };
+
+  const handleDeleteCategoryClick = async (catName: string) => {
+    if (confirm(`Deseja remover a categoria "${catName}"?`)) {
+      setCategoryNotice(null);
+      const result = await deleteCategory(catName);
+      if (result.success) {
+        setCategoryNotice({ type: 'success', message: result.message || 'Categoria removida.' });
+        if (category === catName && categories.length > 0) {
+          setCategory(categories[0]);
+        }
+        setTimeout(() => setCategoryNotice(null), 3000);
+      } else {
+        setCategoryNotice({ type: 'error', message: result.message || 'Erro ao remover.' });
+      }
+    }
+  };
+
   // Filtered management list
   const filteredArticles = articles.filter(a => {
     const matchesSearch =
@@ -443,6 +481,15 @@ export const AdminPanel: React.FC = () => {
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span>Conectado: <strong>{adminUser?.name || 'Administrador'}</strong> ({adminUser?.role})</span>
             </div>
+
+            <button
+              onClick={() => setIsCategoryModalOpen(true)}
+              className="px-2.5 py-1 text-xs text-emerald-900 dark:text-emerald-200 bg-emerald-100/80 dark:bg-emerald-950/80 hover:bg-emerald-200/80 rounded-lg flex items-center gap-1 transition-colors cursor-pointer border border-emerald-300 dark:border-emerald-800 font-semibold"
+              title="Gerenciar Categorias e Editorias"
+            >
+              <Tag className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Categorias ({categories.length})</span>
+            </button>
 
             <button
               onClick={() => setIsPasswordModalOpen(true)}
@@ -710,15 +757,25 @@ export const AdminPanel: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-5 bg-stone-50/70 dark:bg-stone-800/40 rounded-xl border border-stone-200 dark:border-stone-800">
                 {/* Categoria */}
                 <div className="md:col-span-4">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
-                    Editoria / Categoria
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                      Editoria / Categoria
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCategoryModalOpen(true)}
+                      className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <PlusCircle className="w-3 h-3" />
+                      <span>Nova / Gerenciar</span>
+                    </button>
+                  </div>
                   <select
                     value={category}
-                    onChange={e => setCategory(e.target.value as NewsCategory)}
+                    onChange={e => setCategory(e.target.value)}
                     className="w-full px-3 py-2 text-sm bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-emerald-700/30"
                   >
-                    {CATEGORIES.map(cat => (
+                    {categories.map(cat => (
                       <option key={cat} value={cat}>
                         {cat}
                       </option>
@@ -1351,6 +1408,116 @@ export const AdminPanel: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Category Management Modal */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                  <Tag className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold font-editorial text-stone-900 dark:text-stone-100">
+                    Gerenciar Categorias &amp; Editorias
+                  </h3>
+                  <p className="text-xs text-stone-500">
+                    Adicione novas editorias ou gerencie as existentes no portal.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Notification Banner inside Modal */}
+            {categoryNotice && (
+              <div
+                className={`p-3 rounded-xl border text-xs font-medium flex items-center justify-between ${
+                  categoryNotice.type === 'success'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                    : 'bg-red-50 dark:bg-red-950/60 border-red-300 dark:border-red-800 text-red-900 dark:text-red-200'
+                }`}
+              >
+                <span>{categoryNotice.message}</span>
+                <button onClick={() => setCategoryNotice(null)} className="opacity-70 hover:opacity-100">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Add Category Form */}
+            <form onSubmit={handleAddCategorySubmit} className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                Adicionar Nova Categoria
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ex: Esportes, Saúde, Educação, Turismo..."
+                  value={newCategoryName}
+                  onChange={e => setNewCategoryName(e.target.value)}
+                  className="flex-1 px-3.5 py-2 text-sm bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-700/30"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-bold bg-emerald-800 text-white rounded-xl hover:bg-emerald-700 transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>Adicionar</span>
+                </button>
+              </div>
+            </form>
+
+            {/* Current Categories List */}
+            <div className="space-y-2 pt-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                Categorias Ativas no Portal ({categories.length})
+              </label>
+              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-3 bg-stone-50 dark:bg-stone-800/40 rounded-xl border border-stone-200 dark:border-stone-800">
+                {categories.map((catName) => {
+                  const count = articles.filter(a => a.category === catName).length;
+                  return (
+                    <div
+                      key={catName}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-xs text-stone-900 dark:text-stone-100 font-medium shadow-2xs"
+                    >
+                      <span>{catName}</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 dark:bg-stone-700 text-stone-500 font-mono">
+                        {count}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategoryClick(catName)}
+                        className="ml-1 text-stone-400 hover:text-red-600 transition-colors cursor-pointer"
+                        title={`Remover categoria ${catName}`}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="px-5 py-2 text-xs font-bold bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-200 rounded-xl hover:bg-stone-300 dark:hover:bg-stone-700 transition-colors cursor-pointer"
+              >
+                Concluído
+              </button>
+            </div>
           </div>
         </div>
       )}

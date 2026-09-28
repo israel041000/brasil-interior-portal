@@ -49,14 +49,32 @@ interface NewsContextType {
   deleteArticle: (id: string) => Promise<void>;
   setLeadArticle: (id: string) => Promise<void>;
   resetToInitialArticles: () => Promise<void>;
+
+  // Category Management
+  categories: string[];
+  addCategory: (name: string) => Promise<{ success: boolean; message?: string }>;
+  deleteCategory: (name: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 const NewsContext = createContext<NewsContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'brasil_interior_noticias_v1';
+const CATEGORIES_KEY = 'brasil_interior_categories_v1';
 const THEME_KEY = 'brasil_interior_theme_v1';
 const ADMIN_AUTH_KEY = 'brasil_interior_admin_auth_v1';
 const ADMIN_CREDS_KEY = 'brasil_interior_admin_creds_v1';
+
+const DEFAULT_CATEGORIES = [
+  'Geral',
+  'Nacional',
+  'Economia',
+  'Agronegócio',
+  'Política',
+  'Cidades',
+  'Meio Ambiente',
+  'Cultura',
+  'Tecnologia',
+];
 
 const DEFAULT_ADMIN_CREDS = {
   username: 'admin',
@@ -78,6 +96,76 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     return INITIAL_ARTICLES;
   });
+
+  const [categories, setCategories] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(CATEGORIES_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // Fallback
+    }
+    return DEFAULT_CATEGORIES;
+  });
+
+  // Sync categories with Firestore settings/categories doc
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'categories'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data?.list && Array.isArray(data.list) && data.list.length > 0) {
+          setCategories(data.list);
+          localStorage.setItem(CATEGORIES_KEY, JSON.stringify(data.list));
+        }
+      } else {
+        setDoc(doc(db, 'settings', 'categories'), { list: DEFAULT_CATEGORIES }).catch((e) => {
+          console.warn('Erro ao inicializar categorias no Firestore:', e);
+        });
+      }
+    }, (err) => {
+      console.warn('Aviso de snapshot de categorias:', err);
+    });
+    return () => unsub();
+  }, []);
+
+  const addCategory = async (name: string) => {
+    const clean = name.trim();
+    if (!clean) {
+      return { success: false, message: 'Digite um nome de categoria válido.' };
+    }
+    const exists = categories.some(c => c.toLowerCase() === clean.toLowerCase());
+    if (exists) {
+      return { success: false, message: 'Esta categoria já existe!' };
+    }
+
+    const updated = [...categories, clean];
+    setCategories(updated);
+    try {
+      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
+      await setDoc(doc(db, 'settings', 'categories'), { list: updated });
+    } catch (e) {
+      console.warn('Erro ao salvar categoria no Firestore:', e);
+    }
+    return { success: true, message: `Categoria "${clean}" adicionada com sucesso!` };
+  };
+
+  const deleteCategory = async (name: string) => {
+    const clean = name.trim();
+    const updated = categories.filter(c => c.toLowerCase() !== clean.toLowerCase());
+    if (updated.length === 0) {
+      return { success: false, message: 'Você precisa manter pelo menos uma categoria no portal.' };
+    }
+    setCategories(updated);
+    try {
+      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
+      await setDoc(doc(db, 'settings', 'categories'), { list: updated });
+    } catch (e) {
+      console.warn('Erro ao deletar categoria no Firestore:', e);
+    }
+    return { success: true, message: `Categoria "${clean}" removida com sucesso.` };
+  };
 
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
@@ -479,6 +567,9 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteArticle,
         setLeadArticle,
         resetToInitialArticles,
+        categories,
+        addCategory,
+        deleteCategory,
       }}
     >
       {children}

@@ -1,15 +1,6 @@
 export type ScopeType = 'Nacional' | 'Estadual' | 'Municipal';
 
-export type NewsCategory = 
-  | 'Geral'
-  | 'Nacional'
-  | 'Economia'
-  | 'Agronegócio'
-  | 'Política'
-  | 'Cidades'
-  | 'Meio Ambiente'
-  | 'Cultura'
-  | 'Tecnologia';
+export type NewsCategory = string;
 
 export interface Author {
   name: string;
