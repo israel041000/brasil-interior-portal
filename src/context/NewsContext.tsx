@@ -71,7 +71,7 @@ const ADMIN_CREDS_KEY = 'brasil_interior_admin_creds_v1';
 
 const DEFAULT_ADSENSE_SETTINGS: AdSenseSettings = {
   enabled: true,
-  clientScriptId: '',
+  clientScriptId: 'ca-pub-7448837257270904',
   autoAdsEnabled: true,
   showPlaceholders: true,
   headerBannerCode: '',
