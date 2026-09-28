@@ -117,20 +117,6 @@ export const Footer: React.FC = () => {
             <span className="hover:text-stone-300 transition-colors cursor-pointer">Termos de Uso</span>
             <span>·</span>
             <span className="hover:text-stone-300 transition-colors cursor-pointer">Política de Privacidade &amp; LGPD</span>
-            <span>·</span>
-            <a
-              href="#admin"
-              onClick={(e) => {
-                e.preventDefault();
-                setActiveView('admin');
-                window.location.hash = 'admin';
-              }}
-              className="hover:text-stone-300 transition-colors cursor-pointer inline-flex items-center gap-1 text-stone-400 font-medium hover:underline"
-              title="Acesso à Redação e Gestão de Notícias"
-            >
-              <Lock className="w-3 h-3 text-stone-500" />
-              <span>Acesso à Redação (ADM)</span>
-            </a>
           </div>
 
           <button

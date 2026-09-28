@@ -49,17 +49,19 @@ export const Header: React.FC = () => {
             <span className="hidden md:inline">Edição Digital em Tempo Real</span>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                setActiveView('admin');
-                window.location.hash = 'admin';
-              }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-[11px] cursor-pointer transition-colors shadow-xs"
-              title="Acessar Redação e Painel Administrativo"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
-              <span>{isAdminAuthenticated ? `ADM: ${adminUser?.name || 'Logado'}` : 'Painel ADM / Redação'}</span>
-            </button>
+            {activeView === 'admin' && (
+              <button
+                onClick={() => {
+                  setActiveView('home');
+                  window.location.hash = '';
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-700 hover:bg-amber-600 text-white font-semibold text-[11px] cursor-pointer transition-colors"
+                title="Voltar ao Site Público"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-200" />
+                <span>Modo Redação Ativo (Sair do Painel)</span>
+              </button>
+            )}
 
             {hasRegionalFilter && (
               <span className="hidden lg:inline text-emerald-400 font-medium">
@@ -123,20 +125,6 @@ export const Header: React.FC = () => {
             }`}
           >
             Brasil &amp; Interior
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveView('admin');
-              window.location.hash = 'admin';
-            }}
-            className={`whitespace-nowrap transition-colors hover:text-emerald-700 dark:hover:text-emerald-400 cursor-pointer font-bold flex items-center gap-1 ${
-              activeView === 'admin'
-                ? 'text-emerald-800 dark:text-emerald-400'
-                : 'text-amber-700 dark:text-amber-400'
-            }`}
-          >
-            <span>Painel ADM</span>
           </button>
 
           {/* Estados e Municípios Dropdown Trigger */}
