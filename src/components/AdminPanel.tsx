@@ -272,10 +272,11 @@ export const AdminPanel: React.FC = () => {
 
   const handleImportFromUrl = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!importUrl.trim() || !importUrl.startsWith('http')) {
+    const cleanInput = importUrl.trim();
+    if (!cleanInput) {
       setNotification({
         type: 'error',
-        message: 'Por favor, informe um URL de notícia válido iniciando com http:// ou https://',
+        message: 'Por favor, cole o link da notícia (URL) ou o texto da matéria para importar.',
       });
       setTimeout(() => setNotification(null), 4000);
       return;
@@ -283,15 +284,18 @@ export const AdminPanel: React.FC = () => {
 
     setIsImportingUrl(true);
     try {
+      const isUrl = cleanInput.startsWith('http://') || cleanInput.startsWith('https://');
+      const payload = isUrl ? { url: cleanInput } : { rawText: cleanInput };
+
       const res = await fetch('/api/scrape-article', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: importUrl.trim() }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
       if (!res.ok || !data.article) {
-        throw new Error(data.error || 'Não foi possível extrair a matéria deste link.');
+        throw new Error(data.error || 'Não foi possível estruturar a matéria informada.');
       }
 
       const art = data.article;
@@ -308,13 +312,13 @@ export const AdminPanel: React.FC = () => {
 
       setNotification({
         type: 'success',
-        message: '✨ Matéria importada e estruturada com sucesso! Revise os campos preenchidos e publique quando desejar.',
+        message: '✨ Matéria importada e estruturada com sucesso! Revise os campos e clique em publicar.',
       });
     } catch (err: any) {
       console.error('Import error:', err);
       setNotification({
         type: 'error',
-        message: err.message || 'Erro ao importar do link. Verifique se a página é pública e tente novamente.',
+        message: err.message || 'Erro ao importar do link. Verifique se o endereço é público ou tente colar o texto.',
       });
     } finally {
       setIsImportingUrl(false);
@@ -634,13 +638,13 @@ export const AdminPanel: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-bold font-editorial text-emerald-300 flex items-center gap-1.5">
-                        <span>Importar &amp; Replicar Matéria por Link / URL</span>
+                        <span>Importar &amp; Replicar Matéria por Link / URL ou Texto</span>
                         <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
                           IA Automática
                         </span>
                       </h3>
                       <p className="text-xs text-stone-300 mt-0.5">
-                        Cole a URL de qualquer portal de notícias. A IA lerá o link e preencherá título, resumo, corpo, imagem e localidade para você!
+                        Cole o link da matéria (URL) ou o texto bruto. A IA lerá o conteúdo e preencherá título, resumo, corpo, imagem e localidade!
                       </p>
                     </div>
                   </div>
@@ -648,10 +652,10 @@ export const AdminPanel: React.FC = () => {
 
                 <div className="flex flex-col sm:flex-row gap-2 pt-1">
                   <input
-                    type="url"
+                    type="text"
                     value={importUrl}
                     onChange={e => setImportUrl(e.target.value)}
-                    placeholder="Cole o link da matéria (ex: https://site.com/noticia...)"
+                    placeholder="Cole o link da matéria (ex: https://site.com/noticia...) ou o texto da matéria..."
                     className="flex-1 px-3.5 py-2.5 text-xs bg-stone-950/90 border border-emerald-800/60 rounded-xl text-stone-100 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
                   />
                   <button

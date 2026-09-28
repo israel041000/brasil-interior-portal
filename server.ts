@@ -29,14 +29,14 @@ function stripHtmlTags(html: string): string {
     .trim();
 }
 
-// Endpoint to scrape and structure news article from a given URL
+// Endpoint to scrape and structure news article from a given URL or text
 app.post('/api/scrape-article', async (req, res) => {
   try {
-    const { url } = req.body;
+    const { url, rawText } = req.body;
 
-    if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    if ((!url || typeof url !== 'string' || !url.startsWith('http')) && !rawText) {
       return res.status(400).json({ 
-        error: 'Por favor, informe um URL válido iniciando com http:// ou https://' 
+        error: 'Por favor, informe um URL de notícia válido (iniciando com http:// ou https://) ou cole o texto da matéria.' 
       });
     }
 
@@ -45,116 +45,148 @@ app.post('/api/scrape-article', async (req, res) => {
     let pageOgImage = '';
     let pageOgDescription = '';
 
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-        },
-        redirect: 'follow',
-      });
+    if (url) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Cache-Control': 'no-cache',
+          },
+          redirect: 'follow',
+        });
 
-      if (response.ok) {
-        pageHtml = await response.text();
+        if (response.ok) {
+          pageHtml = await response.text();
 
-        // Basic meta extraction
-        const ogTitleMatch = pageHtml.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i) ||
-                             pageHtml.match(/<meta\s+name=["']title["']\s+content=["']([^"']+)["']/i);
-        if (ogTitleMatch) pageTitle = ogTitleMatch[1];
+          // OpenGraph & meta tags
+          const ogTitleMatch = pageHtml.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i) ||
+                               pageHtml.match(/<meta\s+name=["']title["']\s+content=["']([^"']+)["']/i) ||
+                               pageHtml.match(/<title>([^<]+)<\/title>/i);
+          if (ogTitleMatch) pageTitle = ogTitleMatch[1];
 
-        const ogImgMatch = pageHtml.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i) ||
-                           pageHtml.match(/<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i);
-        if (ogImgMatch) pageOgImage = ogImgMatch[1];
+          const ogImgMatch = pageHtml.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i) ||
+                             pageHtml.match(/<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i);
+          if (ogImgMatch) pageOgImage = ogImgMatch[1];
 
-        const ogDescMatch = pageHtml.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i) ||
-                            pageHtml.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i);
-        if (ogDescMatch) pageOgDescription = ogDescMatch[1];
+          const ogDescMatch = pageHtml.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i) ||
+                              pageHtml.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i);
+          if (ogDescMatch) pageOgDescription = ogDescMatch[1];
+        }
+      } catch (fetchErr) {
+        console.warn('Direct fetch notice (will rely on Gemini analysis/search):', fetchErr);
       }
-    } catch (fetchErr) {
-      console.warn('Scraping fetch warning:', fetchErr);
     }
 
-    const cleanTextSample = stripHtmlTags(pageHtml).slice(0, 12000);
+    const cleanTextSample = rawText || stripHtmlTags(pageHtml).slice(0, 15000);
 
-    const promptText = `Você é um editor jornalístico profissional do portal "Brasil & Interior".
-Analise o conteúdo e metadados extraídos do seguinte link de notícia:
-URL: ${url}
-Título prévio: ${pageTitle}
-Descrição prévia: ${pageOgDescription}
-Imagem prévia: ${pageOgImage}
+    const promptText = `Você é um editor jornalístico sênior do portal "Brasil & Interior".
+Analise o seguinte conteúdo para extrair e estruturar uma reportagem jornalística completa:
+${url ? `URL da notícia: ${url}` : ''}
+${pageTitle ? `Título preliminar: ${pageTitle}` : ''}
+${pageOgDescription ? `Resumo preliminar: ${pageOgDescription}` : ''}
+${pageOgImage ? `Imagem preliminar: ${pageOgImage}` : ''}
 
-Amostra do texto da página:
+Amostra / Conteúdo do texto:
 """
-${cleanTextSample || 'Não foi possível extrair HTML direto. Por favor, infira sobre o link/assunto.'}
+${cleanTextSample || 'Se a amostra estiver vazia, pesquise o assunto da URL informada e recrie a matéria.'}
 """
 
-Sua tarefa é organizar e estruturar esta matéria em português para publicação no portal.
-Retorne um objeto JSON estrito no seguinte formato:
-- title: Título jornalístico atraente e completo.
-- subtitle: Resumo ou linha fina de 1 a 2 frases claras.
-- content: O corpo completo da reportagem organizado em parágrafos.
-- coverImage: URL da imagem de capa (use "${pageOgImage}" se for válida, ou uma URL no Unsplash temática se vazia).
-- category: Uma destas opções exatas: ["Geral", "Nacional", "Economia", "Agronegócio", "Política", "Cidades", "Meio Ambiente", "Cultura", "Tecnologia"].
-- scope: Uma destas opções exatas: ["Nacional", "Estadual", "Municipal"].
-- stateSigla: A sigla de 2 letras do Estado brasileiro citado (ex: "SP", "MT", "MG", "BA"), ou string vazia se for estritamente nacional.
-- cityName: O nome do município/cidade citado na matéria se houver, ou string vazia.
+Monte uma matéria jornalística perfeita em português no formato JSON com as chaves:
+- title: Título jornalístico atraente e impactante.
+- subtitle: Subtítulo (linha fina) esclarecedor de 1 a 2 frases.
+- content: O corpo completo da reportagem, bem estruturado em parágrafos coerentes.
+- coverImage: URL de imagem válida de capa (prefira "${pageOgImage}" se existente, ou URL temática do Unsplash).
+- category: Escolha EXATAMENTE uma destas categorias: "Geral", "Nacional", "Economia", "Agronegócio", "Política", "Cidades", "Meio Ambiente", "Cultura", "Tecnologia".
+- scope: Escolha EXATAMENTE uma destas opções: "Nacional", "Estadual", "Municipal".
+- stateSigla: Sigla do estado brasileiro citado (ex: "SP", "MT", "MG", "PR", "BA"), ou string vazia.
+- cityName: Nome da cidade/município citado se houver, ou string vazia.
 - tags: Array de 3 a 5 palavras-chave relevantes.
-- authorName: Nome do veículo/repórter original (ex: "Redação / Agência de Notícias").
+- authorName: Nome do veículo/repórter original ou "Redação Brasil & Interior".
 `;
 
-    // Call Gemini API to extract structured fields
-    const geminiResult = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: promptText,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            title: { type: Type.STRING },
-            subtitle: { type: Type.STRING },
-            content: { type: Type.STRING },
-            coverImage: { type: Type.STRING },
-            category: { type: Type.STRING },
-            scope: { type: Type.STRING },
-            stateSigla: { type: Type.STRING },
-            cityName: { type: Type.STRING },
-            tags: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
+    let parsedJson: any = {};
+
+    try {
+      // Call Gemini 2.5 Flash
+      const geminiResult = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: promptText,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              subtitle: { type: Type.STRING },
+              content: { type: Type.STRING },
+              coverImage: { type: Type.STRING },
+              category: { type: Type.STRING },
+              scope: { type: Type.STRING },
+              stateSigla: { type: Type.STRING },
+              cityName: { type: Type.STRING },
+              tags: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              authorName: { type: Type.STRING },
             },
-            authorName: { type: Type.STRING },
+            required: ['title', 'subtitle', 'content', 'category', 'scope'],
           },
-          required: ['title', 'subtitle', 'content', 'category', 'scope'],
         },
-      },
-    });
+      });
 
-    const parsedJson = JSON.parse(geminiResult.text || '{}');
+      if (geminiResult && geminiResult.text) {
+        parsedJson = JSON.parse(geminiResult.text);
+      }
+    } catch (geminiErr) {
+      console.warn('First gemini attempt notice, retrying without strict schema:', geminiErr);
+      // Fallback call without responseSchema if schema validation fails
+      const fallbackResult = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: promptText + '\n\nResponda APENAS em JSON válido sem marcações markdown.',
+      });
+      const rawRes = fallbackResult.text || '';
+      const cleanJsonStr = rawRes.replace(/```json/gi, '').replace(/```/g, '').trim();
+      try {
+        parsedJson = JSON.parse(cleanJsonStr);
+      } catch (e) {
+        console.error('JSON parse fallback error:', e);
+      }
+    }
 
-    // Return structured article object to client
+    // Ensure fallback defaults if needed
+    const finalTitle = parsedJson.title || pageTitle || 'Reportagem Importada';
+    const finalSubtitle = parsedJson.subtitle || pageOgDescription || 'Confira os detalhes desta matéria no portal.';
+    const finalContent = parsedJson.content || cleanTextSample || 'Conteúdo da reportagem importado do portal.';
+    const finalCover = parsedJson.coverImage && parsedJson.coverImage.startsWith('http')
+      ? parsedJson.coverImage
+      : pageOgImage || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80';
+
     return res.json({
       success: true,
       article: {
-        title: parsedJson.title || pageTitle || 'Notícia Importada',
-        subtitle: parsedJson.subtitle || pageOgDescription || '',
-        content: parsedJson.content || cleanTextSample || '',
-        coverImage: parsedJson.coverImage || pageOgImage || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80',
+        title: finalTitle,
+        subtitle: finalSubtitle,
+        content: finalContent,
+        coverImage: finalCover,
         category: parsedJson.category || 'Geral',
         scope: parsedJson.scope || 'Municipal',
         stateSigla: parsedJson.stateSigla || 'SP',
         cityName: parsedJson.cityName || 'Campinas',
-        tags: parsedJson.tags && parsedJson.tags.length > 0 ? parsedJson.tags : ['Brasil', 'Interior', 'Notícias'],
+        tags: parsedJson.tags && Array.isArray(parsedJson.tags) && parsedJson.tags.length > 0 
+          ? parsedJson.tags 
+          : ['Brasil', 'Interior', 'Notícias'],
         authorName: parsedJson.authorName || 'Correspondente / Fonte Externa',
-        sourceUrl: url,
+        sourceUrl: url || '',
       },
     });
 
   } catch (err: any) {
     console.error('Error in /api/scrape-article:', err);
     return res.status(500).json({ 
-      error: 'Não foi possível extrair a matéria deste link. Verifique se o endereço está correto e acessível.' 
+      error: 'Não foi possível extrair a matéria automaticamente deste link. Tente outro link ou cole o texto da matéria.' 
     });
   }
 });
