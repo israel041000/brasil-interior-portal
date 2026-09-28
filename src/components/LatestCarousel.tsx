@@ -87,7 +87,7 @@ export const LatestCarousel: React.FC<LatestCarouselProps> = ({ articles }) => {
             <Sparkles className="w-4 h-4" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold font-editorial text-stone-900 dark:text-stone-100">
-            Carrossel de Últimas Publicações
+            Últimas Publicações
           </h2>
         </div>
 

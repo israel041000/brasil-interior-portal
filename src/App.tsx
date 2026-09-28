@@ -170,8 +170,8 @@ const MainContent: React.FC = () => {
                   </section>
                 )}
 
-                {/* 2. Carrossel Dinâmico dos Últimos Artigos Publicados */}
-                <section aria-label="Carrossel de Últimas Notícias">
+                {/* 2. Últimas Publicações */}
+                <section aria-label="Últimas Publicações">
                   <LatestCarousel articles={filteredArticles} />
                 </section>
 
