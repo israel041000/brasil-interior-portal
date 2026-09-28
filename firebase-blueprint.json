@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "Article": {
+      "title": "Article",
+      "description": "Notícia ou reportagem do portal Brasil & Interior",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 200, "description": "Título da notícia" },
+        "subtitle": { "type": "string", "maxLength": 500, "description": "Subtítulo da notícia" },
+        "category": { "type": "string", "maxLength": 50, "description": "Categoria da matéria" },
+        "scope": { "type": "string", "enum": ["Nacional", "Estadual", "Municipal"], "description": "Escopo da cobertura" },
+        "stateSigla": { "type": "string", "maxLength": 2, "description": "Sigla do estado" },
+        "stateName": { "type": "string", "maxLength": 50, "description": "Nome do estado" },
+        "cityName": { "type": "string", "maxLength": 100, "description": "Nome do município" },
+        "author": { "type": "string", "maxLength": 100, "description": "Nome do jornalista ou autor" },
+        "publishedAt": { "type": "string", "maxLength": 50, "description": "Data de publicação ISO" },
+        "updatedAt": { "type": "string", "maxLength": 50, "description": "Data de atualização ISO" },
+        "imageUrl": { "type": "string", "maxLength": 2000, "description": "URL da imagem principal" },
+        "caption": { "type": "string", "maxLength": 300, "description": "Legenda da imagem principal" },
+        "content": { "type": "string", "maxLength": 50000, "description": "Texto completo da notícia em Markdown/HTML" },
+        "featured": { "type": "boolean", "description": "Se é destaque secundário" },
+        "isHeroLead": { "type": "boolean", "description": "Se é a manchete principal" },
+        "views": { "type": "number", "description": "Contador de visualizações" },
+        "tags": { "type": "array", "description": "Tags da matéria" },
+        "status": { "type": "string", "enum": ["publicado", "rascunho"], "description": "Status de publicação" }
+      },
+      "required": ["title", "category", "scope", "content", "status"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Perfil de administrador e jornalista credenciado",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string", "maxLength": 50, "description": "Nome de usuário" },
+        "name": { "type": "string", "maxLength": 100, "description": "Nome completo" },
+        "role": { "type": "string", "maxLength": 50, "description": "Função jornalística" },
+        "email": { "type": "string", "maxLength": 150, "description": "E-mail oficial" },
+        "lastLogin": { "type": "string", "maxLength": 50, "description": "Data do último login" }
+      },
+      "required": ["username", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "Coleção de notícias e reportagens regionais e nacionais"
+    },
+    "/admins/{adminId}": {
+      "schema": "AdminUser",
+      "description": "Coleção de contas e perfis administrativos credenciados"
+    }
+  }
+}

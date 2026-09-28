@@ -1,0 +1,6 @@
+{
+  "name": "Brasil & Interior - Portal de Notícias Regional",
+  "description": "Portal jornalístico moderno com cobertura das principais notícias do Brasil e foco aprofundado nos municípios e interior de todos os estados.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
