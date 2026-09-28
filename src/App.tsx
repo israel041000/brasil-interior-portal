@@ -7,7 +7,6 @@ import React, { useMemo } from 'react';
 import { NewsProvider, useNews } from './context/NewsContext';
 import { Header } from './components/Header';
 import { ActiveFilterBanner } from './components/ActiveFilterBanner';
-import { HeroLeadStory } from './components/HeroLeadStory';
 import { SecondaryGrid } from './components/SecondaryGrid';
 import { LatestCarousel } from './components/LatestCarousel';
 import { RegionalSection } from './components/RegionalSection';
@@ -76,26 +75,22 @@ const MainContent: React.FC = () => {
     });
   }, [publishedArticles, searchQuery, selectedState, selectedCity, selectedCategory]);
 
-  // Lead story: find explicitly marked lead or first in list
-  const leadStory = useMemo(() => {
-    if (selectedState || selectedCity || searchQuery || selectedCategory) {
-      return filteredArticles[0] || null;
-    }
-    return publishedArticles.find(a => a.isLead) || publishedArticles[0] || null;
-  }, [publishedArticles, filteredArticles, selectedState, selectedCity, searchQuery, selectedCategory]);
+  // Top stories for the hero carousel (up to 6)
+  const carouselArticles = useMemo(() => {
+    return filteredArticles.slice(0, 6);
+  }, [filteredArticles]);
 
-  // Secondary stories (exclude lead story) - 9 items for Destaques em Pauta
-  const secondaryStories = useMemo(() => {
-    if (!leadStory) return [];
-    return filteredArticles.filter(a => a.id !== leadStory.id).slice(0, 9);
-  }, [filteredArticles, leadStory]);
+  // Secondary stories for Destaques em Pauta (up to 9 articles)
+  const destaquesPautaArticles = useMemo(() => {
+    if (filteredArticles.length <= 1) return filteredArticles;
+    // Show next 9 articles after top main headline or top slice
+    return filteredArticles.slice(1, 10);
+  }, [filteredArticles]);
 
-  // Remaining stories
+  // Remaining articles for lower feed
   const remainingStories = useMemo(() => {
-    if (!leadStory) return filteredArticles;
-    const secondaryIds = new Set(secondaryStories.map(s => s.id));
-    return filteredArticles.filter(a => a.id !== leadStory.id && !secondaryIds.has(a.id));
-  }, [filteredArticles, leadStory, secondaryStories]);
+    return filteredArticles.slice(10);
+  }, [filteredArticles]);
 
   const hasSpecificFilter = Boolean(selectedState || selectedCity || searchQuery || selectedCategory);
 
@@ -163,31 +158,24 @@ const MainContent: React.FC = () => {
               </div>
             ) : (
               <>
-                {/* 1. Destaque Principal de Capa */}
-                {leadStory && (
-                  <section aria-label="Manchete Principal">
-                    <HeroLeadStory article={leadStory} />
-                  </section>
-                )}
-
-                {/* 2. Últimas Publicações */}
-                <section aria-label="Últimas Publicações">
-                  <LatestCarousel articles={filteredArticles} />
+                {/* 1. Carrossel de Manchetes Principais de Capa (NO TOPO) */}
+                <section aria-label="Manchetes Principais em Carrossel">
+                  <LatestCarousel articles={carouselArticles} />
                 </section>
 
-                {/* 3. Grelha de Destaques em Pauta (9 Artigos) */}
-                {secondaryStories.length > 0 && (
-                  <section aria-label="Notícias Secundárias">
+                {/* 2. Grelha de Destaques em Pauta (Logo após o carrossel) */}
+                {destaquesPautaArticles.length > 0 && (
+                  <section aria-label="Destaques em Pauta">
                     <div className="flex items-center justify-between pb-3 mb-4 border-b border-stone-200 dark:border-stone-800">
                       <div className="flex items-center gap-2">
                         <Flame className="w-4 h-4 text-emerald-700 dark:text-emerald-500" />
                         <h2 className="text-lg sm:text-xl font-bold font-editorial text-stone-900 dark:text-stone-100">
-                          Destaques em Pauta ({secondaryStories.length} de 9)
+                          Destaques em Pauta ({destaquesPautaArticles.length})
                         </h2>
                       </div>
                       <span className="text-xs text-stone-500">Reportagens Especiais de Todo o País</span>
                     </div>
-                    <SecondaryGrid articles={secondaryStories} />
+                    <SecondaryGrid articles={destaquesPautaArticles} />
                   </section>
                 )}
 
