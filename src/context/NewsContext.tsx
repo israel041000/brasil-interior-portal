@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Article, BrazilianState, BrazilianRegion } from '../types';
+import { Article, BrazilianState, BrazilianRegion, AdSenseSettings } from '../types';
 import { INITIAL_ARTICLES } from '../data/mockArticles';
 import { BRAZIL_STATES } from '../data/brazilLocations';
 import { db } from '../firebase';
@@ -54,15 +54,31 @@ interface NewsContextType {
   categories: string[];
   addCategory: (name: string) => Promise<{ success: boolean; message?: string }>;
   deleteCategory: (name: string) => Promise<{ success: boolean; message?: string }>;
+
+  // AdSense Monetization Settings
+  adsenseSettings: AdSenseSettings;
+  updateAdSenseSettings: (newSettings: Partial<AdSenseSettings>) => Promise<{ success: boolean; message?: string }>;
 }
 
 const NewsContext = createContext<NewsContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'brasil_interior_noticias_v1';
 const CATEGORIES_KEY = 'brasil_interior_categories_v1';
+const ADSENSE_KEY = 'brasil_interior_adsense_v1';
 const THEME_KEY = 'brasil_interior_theme_v1';
 const ADMIN_AUTH_KEY = 'brasil_interior_admin_auth_v1';
 const ADMIN_CREDS_KEY = 'brasil_interior_admin_creds_v1';
+
+const DEFAULT_ADSENSE_SETTINGS: AdSenseSettings = {
+  enabled: true,
+  clientScriptId: '',
+  autoAdsEnabled: true,
+  showPlaceholders: true,
+  headerBannerCode: '',
+  inFeedBannerCode: '',
+  inArticleBannerCode: '',
+  bottomArticleBannerCode: '',
+};
 
 const DEFAULT_CATEGORIES = [
   'Geral',
@@ -165,6 +181,64 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('Erro ao deletar categoria no Firestore:', e);
     }
     return { success: true, message: `Categoria "${clean}" removida com sucesso.` };
+  };
+
+  const [adsenseSettings, setAdsenseSettings] = useState<AdSenseSettings>(() => {
+    try {
+      const saved = localStorage.getItem(ADSENSE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_ADSENSE_SETTINGS;
+  });
+
+  // Sync AdSense settings with Firestore doc 'settings/adsense'
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'adsense'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as AdSenseSettings;
+        if (data) {
+          setAdsenseSettings(data);
+          localStorage.setItem(ADSENSE_KEY, JSON.stringify(data));
+        }
+      } else {
+        setDoc(doc(db, 'settings', 'adsense'), DEFAULT_ADSENSE_SETTINGS).catch((e) => {
+          console.warn('Erro ao inicializar AdSense no Firestore:', e);
+        });
+      }
+    }, (err) => {
+      console.warn('Aviso de snapshot de AdSense:', err);
+    });
+    return () => unsub();
+  }, []);
+
+  // Inject Google AdSense Script dynamically when clientScriptId is provided
+  useEffect(() => {
+    if (adsenseSettings.enabled && adsenseSettings.clientScriptId) {
+      const scriptId = 'google-adsense-script';
+      let scriptTag = document.getElementById(scriptId) as HTMLScriptElement | null;
+      if (!scriptTag) {
+        scriptTag = document.createElement('script');
+        scriptTag.id = scriptId;
+        scriptTag.async = true;
+        scriptTag.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseSettings.clientScriptId}`;
+        scriptTag.crossOrigin = 'anonymous';
+        document.head.appendChild(scriptTag);
+      } else {
+        scriptTag.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseSettings.clientScriptId}`;
+      }
+    }
+  }, [adsenseSettings.enabled, adsenseSettings.clientScriptId]);
+
+  const updateAdSenseSettings = async (newSettings: Partial<AdSenseSettings>) => {
+    const updated = { ...adsenseSettings, ...newSettings };
+    setAdsenseSettings(updated);
+    try {
+      localStorage.setItem(ADSENSE_KEY, JSON.stringify(updated));
+      await setDoc(doc(db, 'settings', 'adsense'), updated);
+    } catch (e) {
+      console.warn('Erro ao salvar AdSense no Firestore:', e);
+    }
+    return { success: true, message: 'Configurações do AdSense salvas com sucesso!' };
   };
 
   const [selectedState, setSelectedState] = useState<string | null>(null);
@@ -570,6 +644,8 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         categories,
         addCategory,
         deleteCategory,
+        adsenseSettings,
+        updateAdSenseSettings,
       }}
     >
       {children}

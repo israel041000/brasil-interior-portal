@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNews } from '../context/NewsContext';
 import { ArticleContentRenderer } from './ArticleContentRenderer';
+import { AdBanner } from './AdBanner';
 import { DEFAULT_FALLBACK_IMAGE, CATEGORY_FALLBACK_IMAGES } from '../data/mockArticles';
 import { 
   X, 
@@ -193,8 +194,14 @@ export const ArticleReaderModal: React.FC = () => {
           </div>
 
           {/* Long-form Reading Prose (Constrained to 65-75ch max-w-2xl) */}
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto space-y-6">
             <ArticleContentRenderer content={selectedArticle.content} enableDropCap={true} />
+            <AdBanner location="inArticle" />
+          </div>
+
+          {/* Bottom Article Banner */}
+          <div className="max-w-2xl mx-auto">
+            <AdBanner location="bottomArticle" />
           </div>
 
           {/* Tags */}

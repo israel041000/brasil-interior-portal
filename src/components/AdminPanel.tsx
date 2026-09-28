@@ -73,7 +73,9 @@ export const AdminPanel: React.FC = () => {
     updateAdminPassword,
     categories,
     addCategory,
-    deleteCategory
+    deleteCategory,
+    adsenseSettings,
+    updateAdSenseSettings
   } = useNews();
 
   // If user is not logged in, show the secure Admin Login
@@ -94,6 +96,18 @@ export const AdminPanel: React.FC = () => {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [categoryNotice, setCategoryNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // AdSense Monetization Modal State
+  const [isAdSenseModalOpen, setIsAdSenseModalOpen] = useState(false);
+  const [adFormState, setAdFormState] = useState(adsenseSettings);
+  const [adNotice, setAdNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Keep adFormState in sync when modal opens
+  useEffect(() => {
+    if (isAdSenseModalOpen) {
+      setAdFormState(adsenseSettings);
+    }
+  }, [isAdSenseModalOpen, adsenseSettings]);
 
   // Change Password Modal State
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -450,6 +464,21 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleSaveAdSenseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdNotice(null);
+    const res = await updateAdSenseSettings(adFormState);
+    if (res.success) {
+      setAdNotice({ type: 'success', message: res.message || 'Configurações salvas com sucesso!' });
+      setTimeout(() => {
+        setAdNotice(null);
+        setIsAdSenseModalOpen(false);
+      }, 1800);
+    } else {
+      setAdNotice({ type: 'error', message: res.message || 'Erro ao salvar configurações.' });
+    }
+  };
+
   // Filtered management list
   const filteredArticles = articles.filter(a => {
     const matchesSearch =
@@ -489,6 +518,15 @@ export const AdminPanel: React.FC = () => {
             >
               <Tag className="w-3.5 h-3.5 text-emerald-600" />
               <span>Categorias ({categories.length})</span>
+            </button>
+
+            <button
+              onClick={() => setIsAdSenseModalOpen(true)}
+              className="px-2.5 py-1 text-xs text-amber-900 dark:text-amber-200 bg-amber-100/80 dark:bg-amber-950/80 hover:bg-amber-200/80 rounded-lg flex items-center gap-1 transition-colors cursor-pointer border border-amber-300 dark:border-amber-800 font-semibold"
+              title="Configurar Anúncios e Google AdSense"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span>Monetização (AdSense)</span>
             </button>
 
             <button
@@ -1518,6 +1556,187 @@ export const AdminPanel: React.FC = () => {
                 Concluído
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* AdSense Monetization Modal */}
+      {isAdSenseModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in overflow-y-auto">
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl relative my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold font-editorial text-stone-900 dark:text-stone-100">
+                    Gerenciador de Monetização &amp; AdSense
+                  </h3>
+                  <p className="text-xs text-stone-500">
+                    Ative anúncios automáticos do Google AdSense ou cole blocos de anúncios personalizados.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAdSenseModalOpen(false)}
+                className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Notification Banner inside Modal */}
+            {adNotice && (
+              <div
+                className={`p-3 rounded-xl border text-xs font-medium flex items-center justify-between ${
+                  adNotice.type === 'success'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                    : 'bg-red-50 dark:bg-red-950/60 border-red-300 dark:border-red-800 text-red-900 dark:text-red-200'
+                }`}
+              >
+                <span>{adNotice.message}</span>
+                <button onClick={() => setAdNotice(null)} className="opacity-70 hover:opacity-100">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveAdSenseSubmit} className="space-y-4">
+              {/* Toggles */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-stone-50 dark:bg-stone-800/40 rounded-xl border border-stone-200 dark:border-stone-800">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={adFormState.enabled}
+                    onChange={e => setAdFormState({ ...adFormState, enabled: e.target.checked })}
+                    className="w-4 h-4 text-emerald-700 rounded focus:ring-emerald-600"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-stone-900 dark:text-stone-100 block">
+                      Ativar Sistema de Anúncios
+                    </span>
+                    <span className="text-[11px] text-stone-500 block">
+                      Habilita a exibição de propagandas no portal
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={adFormState.showPlaceholders}
+                    onChange={e => setAdFormState({ ...adFormState, showPlaceholders: e.target.checked })}
+                    className="w-4 h-4 text-emerald-700 rounded focus:ring-emerald-600"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-stone-900 dark:text-stone-100 block">
+                      Exibir Espaços de Teste (Placeholders)
+                    </span>
+                    <span className="text-[11px] text-stone-500 block">
+                      Mostra caixas reservadas quando não houver código
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Publisher Client ID */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                  ID do Publisher Google AdSense (Opcional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: ca-pub-1234567890123456"
+                  value={adFormState.clientScriptId}
+                  onChange={e => setAdFormState({ ...adFormState, clientScriptId: e.target.value.trim() })}
+                  className="w-full px-3.5 py-2 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 font-mono"
+                />
+                <p className="text-[11px] text-stone-500 mt-1">
+                  Ao informar seu ID de cliente AdSense, a tag oficial do Google AdSense é carregada automaticamente na página.
+                </p>
+              </div>
+
+              {/* Individual Banner Slots */}
+              <div className="space-y-3 pt-2">
+                <span className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 border-b pb-1 border-stone-100 dark:border-stone-800">
+                  Blocos de Anúncios Personalizados (Cole a tag &lt;ins&gt; ou código HTML)
+                </span>
+
+                {/* Top Banner */}
+                <div>
+                  <label className="block text-xs font-semibold text-stone-800 dark:text-stone-200 mb-1">
+                    1. Anúncio de Topo da Capa (Superbanner / Leaderboard)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder='Ex: <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-..." data-ad-slot="..." data-ad-format="auto"></ins>'
+                    value={adFormState.headerBannerCode}
+                    onChange={e => setAdFormState({ ...adFormState, headerBannerCode: e.target.value })}
+                    className="w-full p-2.5 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-xl font-mono text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+
+                {/* InFeed Banner */}
+                <div>
+                  <label className="block text-xs font-semibold text-stone-800 dark:text-stone-200 mb-1">
+                    2. Anúncio de Feed (Entre Seções na Página Inicial)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder='Ex: código do bloco in-feed do AdSense...'
+                    value={adFormState.inFeedBannerCode}
+                    onChange={e => setAdFormState({ ...adFormState, inFeedBannerCode: e.target.value })}
+                    className="w-full p-2.5 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-xl font-mono text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+
+                {/* InArticle Banner */}
+                <div>
+                  <label className="block text-xs font-semibold text-stone-800 dark:text-stone-200 mb-1">
+                    3. Anúncio Interno da Notícia (No Meio do Texto - Alta Conversão ⭐)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder='Ex: código do bloco in-article do AdSense...'
+                    value={adFormState.inArticleBannerCode}
+                    onChange={e => setAdFormState({ ...adFormState, inArticleBannerCode: e.target.value })}
+                    className="w-full p-2.5 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-xl font-mono text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+
+                {/* BottomArticle Banner */}
+                <div>
+                  <label className="block text-xs font-semibold text-stone-800 dark:text-stone-200 mb-1">
+                    4. Anúncio de Fim de Notícia (Rodapé do Texto)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder='Ex: código do bloco de fim de notícia...'
+                    value={adFormState.bottomArticleBannerCode}
+                    onChange={e => setAdFormState({ ...adFormState, bottomArticleBannerCode: e.target.value })}
+                    className="w-full p-2.5 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-xl font-mono text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAdSenseModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-stone-600 dark:text-stone-400 hover:text-stone-900"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 text-xs font-bold bg-amber-700 text-white hover:bg-amber-800 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Salvar Monetização</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

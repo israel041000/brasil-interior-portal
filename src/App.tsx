@@ -14,6 +14,7 @@ import { LatestNewsFeed } from './components/LatestNewsFeed';
 import { ArticleReaderModal } from './components/ArticleReaderModal';
 import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
+import { AdBanner } from './components/AdBanner';
 import { BRAZIL_STATES } from './data/brazilLocations';
 import { MapPin, Newspaper, Compass, Flame } from 'lucide-react';
 
@@ -99,6 +100,12 @@ const MainContent: React.FC = () => {
       <Header />
       <ActiveFilterBanner totalResults={filteredArticles.length} />
 
+      {activeView === 'home' && (
+        <div className="max-w-7xl mx-auto px-4 pt-4">
+          <AdBanner location="header" />
+        </div>
+      )}
+
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-12">
         {/* VIEW: ADMIN PANEL */}
         {activeView === 'admin' ? (
@@ -178,6 +185,9 @@ const MainContent: React.FC = () => {
                     <SecondaryGrid articles={destaquesPautaArticles} />
                   </section>
                 )}
+
+                {/* In-Feed Banner Ad */}
+                <AdBanner location="inFeed" />
 
                 {/* 3. Seção "Brasil & Interior" (Blocos organizados por regiões e municípios) */}
                 {!hasSpecificFilter && (

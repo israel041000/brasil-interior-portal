@@ -36,3 +36,14 @@ export interface BrazilianState {
   capital: string;
   municipios: string[];
 }
+
+export interface AdSenseSettings {
+  enabled: boolean;
+  clientScriptId: string; // e.g. ca-pub-XXXXXXXXXXXXXXXX
+  autoAdsEnabled: boolean;
+  showPlaceholders: boolean; // Show placeholder boxes in production if true
+  headerBannerCode: string; // Custom <ins> or HTML code for top header ad
+  inFeedBannerCode: string; // Custom <ins> or HTML code for between sections
+  inArticleBannerCode: string; // Custom <ins> or HTML code for inside article text
+  bottomArticleBannerCode: string; // Custom <ins> or HTML code for end of article
+}
