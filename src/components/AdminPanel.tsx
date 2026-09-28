@@ -1691,24 +1691,10 @@ export const AdminPanel: React.FC = () => {
                   />
                 </div>
 
-                {/* InArticle Banner */}
-                <div>
-                  <label className="block text-xs font-semibold text-stone-800 dark:text-stone-200 mb-1">
-                    3. Anúncio Interno da Notícia (No Meio do Texto - Alta Conversão ⭐)
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder='Ex: código do bloco in-article do AdSense...'
-                    value={adFormState.inArticleBannerCode}
-                    onChange={e => setAdFormState({ ...adFormState, inArticleBannerCode: e.target.value })}
-                    className="w-full p-2.5 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-xl font-mono text-stone-900 dark:text-stone-100"
-                  />
-                </div>
-
                 {/* BottomArticle Banner */}
                 <div>
                   <label className="block text-xs font-semibold text-stone-800 dark:text-stone-200 mb-1">
-                    4. Anúncio de Fim de Notícia (Rodapé do Texto)
+                    3. Anúncio de Fim de Notícia (Rodapé do Texto)
                   </label>
                   <textarea
                     rows={2}

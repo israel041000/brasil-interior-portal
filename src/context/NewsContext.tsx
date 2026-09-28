@@ -76,7 +76,6 @@ const DEFAULT_ADSENSE_SETTINGS: AdSenseSettings = {
   showPlaceholders: true,
   headerBannerCode: '',
   inFeedBannerCode: '',
-  inArticleBannerCode: '',
   bottomArticleBannerCode: '',
 };
 

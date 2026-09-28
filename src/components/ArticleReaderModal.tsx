@@ -196,7 +196,6 @@ export const ArticleReaderModal: React.FC = () => {
           {/* Long-form Reading Prose (Constrained to 65-75ch max-w-2xl) */}
           <div className="max-w-2xl mx-auto space-y-6">
             <ArticleContentRenderer content={selectedArticle.content} enableDropCap={true} />
-            <AdBanner location="inArticle" />
           </div>
 
           {/* Bottom Article Banner */}

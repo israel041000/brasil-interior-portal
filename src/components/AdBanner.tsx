@@ -3,7 +3,7 @@ import { useNews } from '../context/NewsContext';
 import { Megaphone, ExternalLink } from 'lucide-react';
 
 interface AdBannerProps {
-  location: 'header' | 'inFeed' | 'inArticle' | 'bottomArticle';
+  location: 'header' | 'inFeed' | 'bottomArticle';
   className?: string;
 }
 
@@ -24,12 +24,6 @@ export const AdBanner: React.FC<AdBannerProps> = ({ location, className = '' }) 
           code: adsenseSettings.inFeedBannerCode,
           label: 'Anúncio de Feed (Entre Seções da Capa)',
           aspect: 'h-28 sm:h-32 max-w-4xl',
-        };
-      case 'inArticle':
-        return {
-          code: adsenseSettings.inArticleBannerCode,
-          label: 'Anúncio em Meio ao Texto da Reportagem',
-          aspect: 'h-28 sm:h-36 max-w-2xl',
         };
       case 'bottomArticle':
         return {
