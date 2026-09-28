@@ -49,18 +49,35 @@ export const Header: React.FC = () => {
             <span className="hidden md:inline">Edição Digital em Tempo Real</span>
           </div>
           <div className="flex items-center gap-3">
-            {activeView === 'admin' && (
-              <button
-                onClick={() => {
-                  setActiveView('home');
-                  window.location.hash = '';
-                }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-700 hover:bg-amber-600 text-white font-semibold text-[11px] cursor-pointer transition-colors"
-                title="Voltar ao Site Público"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-200" />
-                <span>Modo Redação Ativo (Sair do Painel)</span>
-              </button>
+            {/* Show Admin Toggle Bar ONLY when user is logged in as Admin */}
+            {isAdminAuthenticated && (
+              <div className="flex items-center gap-2">
+                {activeView === 'admin' ? (
+                  <button
+                    onClick={() => {
+                      setActiveView('home');
+                      window.location.hash = 'home';
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-700 hover:bg-amber-600 text-white font-semibold text-[11px] cursor-pointer transition-colors shadow-xs"
+                    title="Alternar para visualização do site público"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-200" />
+                    <span>📰 Ver Site Público</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setActiveView('admin');
+                      window.location.hash = 'admin';
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-700 hover:bg-emerald-600 text-white font-semibold text-[11px] cursor-pointer transition-colors shadow-xs animate-pulse"
+                    title="Alternar para o Painel de Gerenciamento de Notícias"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
+                    <span>🛠️ Painel ADM ({adminUser?.name?.split(' ')[0] || 'Logado'})</span>
+                  </button>
+                )}
+              </div>
             )}
 
             {hasRegionalFilter && (
@@ -126,6 +143,23 @@ export const Header: React.FC = () => {
           >
             Brasil &amp; Interior
           </button>
+
+          {isAdminAuthenticated && (
+            <button
+              onClick={() => {
+                setActiveView('admin');
+                window.location.hash = 'admin';
+              }}
+              className={`whitespace-nowrap transition-colors hover:text-emerald-700 dark:hover:text-emerald-400 cursor-pointer font-bold flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
+                activeView === 'admin'
+                  ? 'bg-emerald-800 text-white'
+                  : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Painel ADM</span>
+            </button>
+          )}
 
           {/* Estados e Municípios Dropdown Trigger */}
           <div className="relative">
@@ -295,6 +329,19 @@ export const Header: React.FC = () => {
               <span>Estados &amp; Cidades</span>
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
+
+            {isAdminAuthenticated && (
+              <button
+                onClick={() => {
+                  setActiveView('admin');
+                  setIsMobileNavOpen(false);
+                }}
+                className="p-2.5 rounded-lg text-xs font-bold text-left border border-emerald-600 bg-emerald-800 text-white flex items-center gap-1.5"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Painel ADM</span>
+              </button>
+            )}
           </div>
 
           {hasRegionalFilter && (
