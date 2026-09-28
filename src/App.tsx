@@ -9,6 +9,7 @@ import { Header } from './components/Header';
 import { ActiveFilterBanner } from './components/ActiveFilterBanner';
 import { HeroLeadStory } from './components/HeroLeadStory';
 import { SecondaryGrid } from './components/SecondaryGrid';
+import { LatestCarousel } from './components/LatestCarousel';
 import { RegionalSection } from './components/RegionalSection';
 import { LatestNewsFeed } from './components/LatestNewsFeed';
 import { ArticleReaderModal } from './components/ArticleReaderModal';
@@ -83,10 +84,10 @@ const MainContent: React.FC = () => {
     return publishedArticles.find(a => a.isLead) || publishedArticles[0] || null;
   }, [publishedArticles, filteredArticles, selectedState, selectedCity, searchQuery, selectedCategory]);
 
-  // Secondary stories (exclude lead story)
+  // Secondary stories (exclude lead story) - 9 items for Destaques em Pauta
   const secondaryStories = useMemo(() => {
     if (!leadStory) return [];
-    return filteredArticles.filter(a => a.id !== leadStory.id).slice(0, 3);
+    return filteredArticles.filter(a => a.id !== leadStory.id).slice(0, 9);
   }, [filteredArticles, leadStory]);
 
   // Remaining stories
@@ -169,17 +170,22 @@ const MainContent: React.FC = () => {
                   </section>
                 )}
 
-                {/* 2. Grelha de Notícias Secundárias */}
+                {/* 2. Carrossel Dinâmico dos Últimos Artigos Publicados */}
+                <section aria-label="Carrossel de Últimas Notícias">
+                  <LatestCarousel articles={filteredArticles} />
+                </section>
+
+                {/* 3. Grelha de Destaques em Pauta (9 Artigos) */}
                 {secondaryStories.length > 0 && (
                   <section aria-label="Notícias Secundárias">
                     <div className="flex items-center justify-between pb-3 mb-4 border-b border-stone-200 dark:border-stone-800">
                       <div className="flex items-center gap-2">
                         <Flame className="w-4 h-4 text-emerald-700 dark:text-emerald-500" />
                         <h2 className="text-lg sm:text-xl font-bold font-editorial text-stone-900 dark:text-stone-100">
-                          Destaques em Pauta
+                          Destaques em Pauta ({secondaryStories.length} de 9)
                         </h2>
                       </div>
-                      <span className="text-xs text-stone-500">Reportagens Especiais</span>
+                      <span className="text-xs text-stone-500">Reportagens Especiais de Todo o País</span>
                     </div>
                     <SecondaryGrid articles={secondaryStories} />
                   </section>

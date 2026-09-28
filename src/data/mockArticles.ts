@@ -213,5 +213,143 @@ O tempo de espera para laudos diagnósticos caiu de 45 dias para menos de 6 hora
     },
     status: 'publicado',
     views: 5310
+  },
+  {
+    id: 'art-009',
+    title: 'Petrolina e Juazeiro ampliam exportação de uva sem semente com irradiação solar e irrigação de precisão',
+    subtitle: 'O Submédio do Vale do São Francisco consolida a safra de frutas tropicais de exportação com certificação global de rastreabilidade.',
+    content: `A fruticultura irrigada no Vale do São Francisco registrou um novo crescimento de 22% nos embarques para os mercados europeu e norte-americano. Em Petrolina (PE) e Juazeiro (BA), o uso combinado de microaspersão automatizada e análise nutricional de folhas por inteligência artificial reduziu o uso de insumos hídricos em 30%.
+
+As cooperativas de produtores familiares da região comemoram o aumento do valor agregado por hectare cultivado, impulsionando a abertura de novos postos de trabalho no interior pernambucano e baiano.`,
+    coverImage: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80',
+    category: 'Agronegócio',
+    scope: 'Municipal',
+    stateSigla: 'PE',
+    stateName: 'Pernambuco',
+    cityName: 'Petrolina',
+    tags: ['Agronegócio', 'Pernambuco', 'Exportação', 'São Francisco'],
+    publishedAt: '2026-09-28T08:30:00Z',
+    readTimeMinutes: 4,
+    author: {
+      name: 'Rodrigo Silveira',
+      role: 'Analista de Mercados Agrícolas'
+    },
+    status: 'publicado',
+    views: 12100
+  },
+  {
+    id: 'art-010',
+    title: 'Santarém e Alter do Chão ganham centro de bioeconomia para processamento sustentável de óleos essenciais',
+    subtitle: 'Comunidades extrativistas do oeste paraense agregam valor à castanha, copaíba e andiroba com apoio de laboratórios regionais de inovação.',
+    content: `A inauguração do novo Parque Tecnológico da Bioeconomia em Santarém marca um momento decisivo para o extrativismo comunitário no Baixo Amazonas. A estrutura permite que cooperativas locais processem óleos cosméticos e medicinais com padrão internacional direto na origem.
+
+O projeto garante remuneração justa para mais de 1.200 famílias de extrativistas e fortalece a conservação das reservas extrativistas da região de Alter do Chão e Tapajós.`,
+    coverImage: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80',
+    category: 'Meio Ambiente',
+    scope: 'Municipal',
+    stateSigla: 'PA',
+    stateName: 'Pará',
+    cityName: 'Santarém',
+    tags: ['Bioeconomia', 'Pará', 'Amazônia', 'Sustentabilidade'],
+    publishedAt: '2026-09-28T07:15:00Z',
+    readTimeMinutes: 5,
+    author: {
+      name: 'Marina Tapajós',
+      role: 'Repórter de Meio Ambiente e Sociedade'
+    },
+    status: 'publicado',
+    views: 9400
+  },
+  {
+    id: 'art-011',
+    title: 'Maringá e Cascavel lideram ranking de cidades mais arborizadas e seguras do Sul do país',
+    subtitle: 'Planejamento urbano integrado e ampliação de parques lineares elevam a qualidade de vida nos municípios do interior paranaense.',
+    content: `Índices recentes de desenvolvimento humano municipal destacam Maringá e Cascavel como referência em parques urbanos, ciclovias integradas e gestão digital de iluminação pública. 
+
+A cobertura vegetal de mais de 30% da área urbana reduz ilhas de calor e favorece a drenagem de águas pluviais, servindo de inspiração para outros centros urbanos de médio porte no interior do Brasil.`,
+    coverImage: 'https://images.unsplash.com/photo-1477959858617-67f30ac4ce78?auto=format&fit=crop&w=1200&q=80',
+    category: 'Cidades',
+    scope: 'Municipal',
+    stateSigla: 'PR',
+    stateName: 'Paraná',
+    cityName: 'Maringá',
+    tags: ['Paraná', 'Urbanismo', 'Qualidade de Vida', 'Cidades Verdes'],
+    publishedAt: '2026-09-28T06:45:00Z',
+    readTimeMinutes: 3,
+    author: {
+      name: 'Lucas Pires',
+      role: 'Correspondente do Sul'
+    },
+    status: 'publicado',
+    views: 8150
+  },
+  {
+    id: 'art-012',
+    title: 'Rota das Rendas em Caicó e Serra do Mel movimenta a economia criativa no interior do RN',
+    subtitle: 'Mestras bordadeiras do Seridó conquistam feiras internacionais com bordado de Caicó de indicação geográfica protegida.',
+    content: `O bordado tradicional do Seridó, no interior do Rio Grande do Norte, vivencia uma fase de forte valorização no design contemporâneo e na moda sustentável. A associação de bordadeiras de Caicó assinou novos contratos de fornecimento para ateliês nacionais e europeus.
+
+A conquista do selo de Indicação Geográfica preserva técnicas seculares e assegura formação técnica remunerada para jovens aprendizes das zonas rurais do Seridó potiguar.`,
+    coverImage: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80',
+    category: 'Cultura',
+    scope: 'Municipal',
+    stateSigla: 'RN',
+    stateName: 'Rio Grande do Norte',
+    cityName: 'Caicó',
+    tags: ['Cultura', 'Artesanato', 'Rio Grande do Norte', 'Seridó'],
+    publishedAt: '2026-09-28T05:20:00Z',
+    readTimeMinutes: 4,
+    author: {
+      name: 'Clarice Medeiros',
+      role: 'Correspondente de Cultura Regional'
+    },
+    status: 'publicado',
+    views: 7200
+  },
+  {
+    id: 'art-013',
+    title: 'Goiânia e Rio Verde recebem maior feira de startups do agronegócio e biotecnologia da América Latina',
+    subtitle: 'Encontro reúne investidores, cientistas e jovens empreendedores para debater fertilizantes orgânicos e automação de máquinas.',
+    content: `O estado de Goiás sedia nesta semana a edição 2026 da AgriTech Summit, reunindo mais de 250 agtechs e cooperativas agrícolas de todo o Centro-Oeste. 
+
+Entre os principais destaques estão os drones autônomos de pulverização seletiva e os bioinsumos produzidos a partir de microrganismos nativos do Cerrado, com potencial para substituir insumos químicos importados.`,
+    coverImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+    category: 'Tecnologia',
+    scope: 'Municipal',
+    stateSigla: 'GO',
+    stateName: 'Goiás',
+    cityName: 'Rio Verde',
+    tags: ['Tecnologia', 'Goiás', 'Agtech', 'Inovação'],
+    publishedAt: '2026-09-28T04:00:00Z',
+    readTimeMinutes: 4,
+    author: {
+      name: 'Gabriel Siqueira',
+      role: 'Repórter de Inovação e Negócios'
+    },
+    status: 'publicado',
+    views: 10500
+  },
+  {
+    id: 'art-014',
+    title: 'Caxias do Sul e Bento Gonçalves impulsionam o enoturismo com foco em sustentabilidade e gastronomia',
+    subtitle: 'Região da Serra Gaúcha registra alta recorde na visitação de vinícolas familiares e rotas do patrimônio colonial italiano.',
+    content: `A Serra Gaúcha encerra o terceiro trimestre com recorde histórico na presença de visitantes nacionais e sul-americanos. Vinícolas de pequeno e médio porte em Caxias do Sul, Bento Gonçalves e Garibaldi investiram em certificações orgânicas, degustações guiadas por enólogos e preservação de vales nativos.
+
+A movimentação aqueceu o setor de hotelaria, gastronomia e transporte comunitário, gerando renda para produtores rurais de várias gerações.`,
+    coverImage: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1200&q=80',
+    category: 'Economia',
+    scope: 'Municipal',
+    stateSigla: 'RS',
+    stateName: 'Rio Grande do Sul',
+    cityName: 'Caxias do Sul',
+    tags: ['Enoturismo', 'Rio Grande do Sul', 'Gastronomia', 'Turismo'],
+    publishedAt: '2026-09-28T03:30:00Z',
+    readTimeMinutes: 4,
+    author: {
+      name: 'Eduardo Rossi',
+      role: 'Especialista em Turismo Regional'
+    },
+    status: 'publicado',
+    views: 9100
   }
 ];
