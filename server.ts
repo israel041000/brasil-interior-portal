@@ -1,12 +1,34 @@
 import express from 'express';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 app.use(express.json({ limit: '10mb' }));
+
+// Serve public directory static files (including ads.txt, icons, etc.)
+app.use(express.static(path.resolve(__dirname, 'public')));
+
+// Explicit route for Google AdSense ads.txt (required for site monetization authorization)
+app.get('/ads.txt', (req, res) => {
+  const adsTxtPath = path.resolve(__dirname, 'public', 'ads.txt');
+  if (fs.existsSync(adsTxtPath)) {
+    const content = fs.readFileSync(adsTxtPath, 'utf-8');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.status(200).send(content);
+  }
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  return res.status(200).send('google.com, pub-7448837257270904, DIRECT, f08c47fec0942fa0\n');
+});
 
 // Initialize Google GenAI SDK with server-side API Key
 const ai = new GoogleGenAI({
@@ -190,7 +212,12 @@ Responda APENAS um código JSON válido e completo (sem textos explicativos ante
 async function startServer() {
   const PORT = process.env.PORT || 3000;
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV === 'production' && fs.existsSync(path.resolve(__dirname, 'dist'))) {
+    app.use(express.static(path.resolve(__dirname, 'dist')));
+    app.get('*', (req, res) => {
+      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+    });
+  } else {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'custom',
@@ -202,7 +229,12 @@ async function startServer() {
       const url = req.originalUrl;
 
       try {
-        let template = await vite.transformIndexHtml(url, `<!DOCTYPE html><html><head></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>`);
+        const indexPath = path.resolve(__dirname, 'index.html');
+        let rawHtml = fs.existsSync(indexPath)
+          ? fs.readFileSync(indexPath, 'utf-8')
+          : '<!DOCTYPE html><html><head></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>';
+
+        const template = await vite.transformIndexHtml(url, rawHtml);
         res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
       } catch (e) {
         vite.ssrFixStacktrace(e as Error);
